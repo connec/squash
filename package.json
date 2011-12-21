@@ -1,0 +1,17 @@
+{
+  "name": "squash",
+  "version": "0.0",
+  "description": "Minimal NodeJS browser packager",
+  "main": "lib/squash.js",
+  "bin": {
+    "squash": "bin/cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "http://github.com/connec/squash.git"
+  },
+  "dependencies": {
+    "uglify-js": ">= 1.2.2"
+  },
+  "license": "WTFPL"
+}
