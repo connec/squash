@@ -1,32 +1,11 @@
-{Squash} = require '../squash'
+{Squash} = require '../lib/squash'
 
 describe 'squash', ->
   
   it 'should produce the boilerplate when no inputs are given', ->
     squash = new Squash
-    expect(squash.squash()).toEqual '''
-      ;(function() {;
-        var resolve = {};
-        var require = function(path) {
-          if(resolve[path])
-            return resolve[path];
-          else
-            throw new Error('could not find module ' + path);
-        };
-        var register = function(paths, callback) {
-          var module  = {exports: {}}
-          var exports = module.exports;
-          callback.call(exports, module, exports, require);
-          
-          for(var i in paths)
-            resolve[paths[i]] = module.exports;
-        };
-        this.exports = resolve;
-        this.require = require;
-        
-        
-      ;}).call(this);
-    '''
+    expect(typeof squash.squash()).toEqual 'string'
+    expect(squash.squash()).toBeTruthy()
   
   it 'should produce code that defines exports and require in the given context', ->
     squash  = new Squash
@@ -45,20 +24,31 @@ describe 'squash', ->
     expect(-> context.require 'non-existant').toThrow 'could not find module non-existant'
   
   it 'should pick up assignments to `module.exports` for given entry requires', ->
-    squash  = new Squash requires: ['./test/requires/a']
+    squash  = new Squash requires: ['./requires/a']
     context = {}
     (new Function squash.squash()).call context
     
-    expect(context.exports['./test/requires/a']).toEqual {a: 'a'}
-    expect(context.require('./test/requires/a')).toEqual {a: 'a'}
+    expect(context.exports['./requires/a']).toEqual {a: 'a'}
+    expect(context.require('./requires/a')).toEqual {a: 'a'}
   
   it 'should detect dependencies in entry requires and catalogue their exports as well', ->
-    squash  = new Squash requires: ['./test/requires/b']
+    squash  = new Squash requires: ['./requires/b']
     context = {}
     (new Function squash.squash()).call context
     
     expect(context.exports['./a']).toEqual {a: 'a'}
     expect(context.require('./a')).toEqual {a: 'a'}
     
-    expect(context.exports['./test/requires/b']).toEqual {a: 'a', b: 'b'}
-    expect(context.require('./test/requires/b')).toEqual {a: 'a', b: 'b'}
+    expect(context.exports['./requires/b']).toEqual {a: 'a', b: 'b'}
+    expect(context.require('./requires/b')).toEqual {a: 'a', b: 'b'}
+  
+  it 'should compress output when the compress flag is set, but this should not effect the result', ->
+    squash1  = new Squash requires: ['./requires/a']
+    context1 = {}
+    (new Function squash1.squash()).call context1
+    
+    squash2  = new Squash compress: true, requires: ['./requires/a']
+    context2 = {}
+    (new Function squash2.squash()).call context2
+    
+    expect(context1.require './requires/a').toEqual context2.require './requires/a'

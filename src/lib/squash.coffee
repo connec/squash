@@ -14,7 +14,7 @@ class exports.Squash
   
   constructor: (options = {}) ->
     @node_path = if process.env.NODE_PATH then process.env.NODE_PATH.split(/:|;/g) else []
-    @cwd       = path.normalize process.cwd()
+    @cwd       = path.dirname module.parent.filename
     @ext       = null
     @cache     = {}
     @resolved  = []
@@ -25,7 +25,7 @@ class exports.Squash
     @extensions[ext] = callback for ext, callback of @options.extensions
   
   squash: ->
-    @require path for path in @options.requires
+    @require path, @cwd for path in @options.requires
     
     output = '''
       ;(function() {;
@@ -49,7 +49,6 @@ class exports.Squash
         
         
     '''
-    
     for module in @ordered
       output += """
         ;register(['#{module.paths.join '\', \''}'], function(module, exports, require) {;
@@ -57,15 +56,20 @@ class exports.Squash
         ;});
         
       """
-    
     output += '\n;}).call(this);'
     
+    ast = uglify.parser.parse output
+    if @options.compress
+      ast    = uglify.uglify.ast_squeeze uglify.uglify.ast_mangle ast
+      output = uglify.uglify.gen_code ast
+    else
+      output = uglify.uglify.gen_code ast, beautify: true
     return output
   
-  require: (x) ->
+  require: (x, from) ->
     return if x in @resolved
     
-    resolved = @resolve x
+    resolved = @resolve x, from
     if resolved of @cache
       @cache[resolved].paths.push x
       return
@@ -73,16 +77,24 @@ class exports.Squash
     js  = @extensions[@ext] resolved
     ast = uglify.parser.parse js
     
-    [old_cwd, @cwd] = [@cwd, path.dirname resolved]
-    @require dependency for dependency in @gather_dependencies ast
-    @cwd = old_cwd
+    from = path.dirname resolved
+    @require dependency, from for dependency in @gather_dependencies ast
     
     @cache[resolved] = {resolved, js, paths: [x]}
     @resolved.push x
     @ordered.push @cache[resolved]
   
-  resolve: (x) ->
-    y = path.resolve @cwd, x
+  gather_dependencies: (ast) ->
+    dependencies = []
+    walker = uglify.uglify.ast_walker()
+    walker.with_walkers call: ([_, name], args) ->
+      if name is 'require' and args.length and args[0][0] is 'string'
+        dependencies.push args[0][1]
+    , -> walker.walk(ast)
+    return dependencies
+  
+  resolve: (x, from) ->
+    y = path.resolve from, x
     if x[0...1] is '/' or x[0...2] is './' or x[0...3] is '../'
       return resolved if resolved = @load_as_file y
       return resolved if resolved = @load_as_directory y
@@ -120,12 +132,3 @@ class exports.Squash
       continue if parts[i] is 'node_modules'
       dirs.push path.join.apply path, parts[0..i].concat ['node_modules']
     return dirs
-  
-  gather_dependencies: (ast) ->
-    dependencies = []
-    walker = uglify.uglify.ast_walker()
-    walker.with_walkers call: ([_, name], args) ->
-      if name is 'require' and args.length and args[0][0] is 'string'
-        dependencies.push args[0][1]
-    , -> walker.walk(ast)
-    return dependencies
