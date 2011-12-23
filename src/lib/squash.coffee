@@ -1,3 +1,14 @@
+###
+
+Rewrite cache to something like
+  cache[from][path] = module
+Pass a different require to each registered module such that
+  require(path) -> cache[current 'module's cwd][path]
+This solves the problem of same paths (e.g. ./a) mapping to the wrong module
+if the cwd is different.
+
+###
+
 fs     = require 'fs'
 path   = require 'path'
 uglify = require 'uglify-js'
@@ -6,7 +17,6 @@ class exports.Squash
   options:
     compress:   false
     extensions: {}
-    file:       null
     requires:   []
   
   extensions:
@@ -17,7 +27,6 @@ class exports.Squash
     @cwd       = path.dirname module.parent.filename
     @ext       = null
     @cache     = {}
-    @resolved  = []
     @ordered   = []
     
     for name, value of options
@@ -67,8 +76,6 @@ class exports.Squash
     return output
   
   require: (x, from) ->
-    return if x in @resolved
-    
     resolved = @resolve x, from
     if resolved of @cache
       @cache[resolved].paths.push x
@@ -77,11 +84,11 @@ class exports.Squash
     js  = @extensions[@ext] resolved
     ast = uglify.parser.parse js
     
-    from = path.dirname resolved
-    @require dependency, from for dependency in @gather_dependencies ast
+    _from = path.dirname resolved
+    @require dependency, _from for dependency in @gather_dependencies ast
     
     @cache[resolved] = {resolved, js, paths: [x]}
-    @resolved.push x
+    @cache[resolved].paths.push path.relative @cwd, resolved if @cwd != from
     @ordered.push @cache[resolved]
   
   gather_dependencies: (ast) ->

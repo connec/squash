@@ -1,6 +1,6 @@
-{Squash} = require '../squash'
+{Squash} = require '../lib/squash'
 args     = process.argv.slice 2
-squash   = new Squash
+path     = require 'path'
 
 usage = """
   
@@ -19,7 +19,7 @@ usage = """
     --compress  -c  Compress result with uglify-js (otherwise result is
                     beautified)
     --help      -h  Print this notice
-    --output    -o  A file to write the result to
+    --file      -f  A file to write the result to
     --watch     -w  Watch all found requires and rebuild on changes (for best
                     results an output file should be specified)
   
@@ -30,7 +30,7 @@ usage = """
 options =
   compress:   false
   extensions: []
-  output:     null
+  file:       null
   requires:   []
 
 skip = false
@@ -49,13 +49,19 @@ for arg, i in args
     when '--help', '-h'
       console.log usage
       return
-    when '--output', '-o'
-      options.output = arg[i + 1]
-      skip           = true
+    when '--file', '-f'
+      options.file = arg[i + 1]
+      skip         = true
     else
       options.requires.push arg
 
 if options.requires.length is 0
   console.log usage
 else
-  console.log (new Squash options).squash()
+  squash     = new Squash options
+  squash.cwd = path.dirname process.cwd
+  result     = squash.squash()
+  if options.file
+    fs.writeFileSync options.file, result
+  else
+    console.log result
