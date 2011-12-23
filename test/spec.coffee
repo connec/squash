@@ -29,7 +29,7 @@ describe 'squash', ->
     (new Function squash.squash()).call context
     
     expect(context.exports['']['./requires/a']).toEqual {a: 'a'}
-    expect(context.require('./requires/a')).toEqual {a: 'a'}
+    expect(context.require './requires/a').toEqual {a: 'a'}
   
   it 'should detect dependencies in entry requires and catalogue their exports as well', ->
     squash  = new Squash requires: ['./requires/b']
@@ -39,7 +39,7 @@ describe 'squash', ->
     expect(context.exports['requires']['./a']).toEqual {a: 'a'}
     
     expect(context.exports['']['./requires/b']).toEqual {a: 'a', b: 'b'}
-    expect(context.require('./requires/b')).toEqual {a: 'a', b: 'b'}
+    expect(context.require './requires/b').toEqual {a: 'a', b: 'b'}
   
   it 'should compress output when the compress flag is set, but this should not effect the result', ->
     squash1  = new Squash requires: ['./requires/a']
@@ -51,3 +51,10 @@ describe 'squash', ->
     (new Function squash2.squash()).call context2
     
     expect(context1.require './requires/a').toEqual context2.require './requires/a'
+  
+  it 'should be able to locate and embed node modules', ->
+    squash  = new Squash requires: ['./requires/c']
+    context = {}
+    (new Function squash.squash()).call context
+    
+    expect(context.require './requires/c').toEqual {c: 'c', d: 'd'}

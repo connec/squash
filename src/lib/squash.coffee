@@ -4,41 +4,36 @@ uglify = require 'uglify-js'
 util   = require 'util'
 
 class exports.Squash
-  # Directories to search for node_modules
-  node_path: if process.env.NODE_PATH then process.env.NODE_PATH.split /:|;/g else []
-  
-  # The directory Squash was invoked from - used to resolve initial requires
-  cwd: null
-  
-  # The extension of the last resolved file
-  ext: null
-  
-  # The details of all the discovered modules
-  modules: {}
-  
-  # Contains the module file names in the order they should be output
-  ordered: []
-  
-  # Default options
-  options:
-    compress:   false
-    extensions: {}
-    requires:   []
-  
-  # Map of file extensions to functions for reading files of that type
-  extensions:
-    '.js': (x) -> fs.readFileSync x, 'utf8'
-  
   # Initialize a new instance with given options
   constructor: (options = {}) ->
-    # Set the cwd
+    # Directories to search for node_modules
+    @node_path = if process.env.NODE_PATH
+      process.env.NODE_PATH.split (if '\\' in process.env.NODE_PATH then /;/g else /:/g)
+    else
+      []
+    
+    # The directory Squash was invoked from - used to resolve initial requires
     @cwd = path.dirname module.parent.filename
     
-    # Extend this instances options with those passed
-    for name, value of options
-      @options[name] = value
+    # The extension of the last resolved file
+    @ext = null
     
-    # Extend the `extensions` object with any extras from the options
+    # The details of all the discovered modules
+    @modules = {}
+    
+    # Contains the module file names in the order they should be output
+    @ordered = []
+    
+    # Set up the options
+    @options =
+      compress:   false
+      extensions: {}
+      requires:   []
+    @options[key] = value for key, value of options
+    
+    # Set up the extensions
+    @extensions =
+      '.js': (x) -> fs.readFileSync x, 'utf8'
     @extensions[ext] = callback for ext, callback of @options.extensions
   
   # Produce a script combining the initial requires and all their dependencies
@@ -167,10 +162,13 @@ class exports.Squash
   
   # Attempt to load the given path as a directory
   load_as_directory: (dir) ->
-    # Attempt to load (as a file) the `main` attribute from package.json
+    # Attempt to load the `main` attribute from package.json
     if path.existsSync (package = path.resolve dir, 'package.json')
       package = JSON.parse fs.readFileSync package, 'utf8'
-      return @load_as_file path.resolve dir, package.main if package.main
+      if package.main
+        name = path.resolve dir, package.main
+        return resolved if resolved = @load_as_file name
+        return resolved if resolved = @load_as_directory name
     for ext of @extensions
       # Try registered extensions with an 'index' file
       return resolved if path.existsSync (resolved = path.resolve dir, 'index' + (@ext = ext))
