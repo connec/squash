@@ -74,7 +74,7 @@ class exports.Squash
           }
         };
         this.exports = modules;
-        this.require = require_from(#{util.inspect @cwd});
+        this.require = require_from('');
     """
     
     for file in @ordered
@@ -105,19 +105,19 @@ class exports.Squash
     
     # If this module has already been required, register the path and move on
     if @modules[file]?
-      names = (@modules[file].names[from] ?= [])
+      names = (@modules[file].names[path.relative @cwd, from] ?= [])
       names.push name unless name in names
       return
     
     # Register the source as a module
     @modules[file] =
-      directory: path.dirname file
+      directory: path.relative @cwd, path.dirname file
       js:        fs.readFileSync file, 'utf8'
       names:     {}
-    @modules[file].names[from] = [name]
+    @modules[file].names[path.relative @cwd, from] = [name]
     
     # Recurse for the module's dependencies
-    @require dependency, @modules[file].directory for dependency in @gather_dependencies file
+    @require dependency, path.dirname file for dependency in @gather_dependencies file
     
     # Finally, register this module in its correct order
     @ordered.push file
