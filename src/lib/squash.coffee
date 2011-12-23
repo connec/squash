@@ -1,17 +1,7 @@
-###
-
-Rewrite cache to something like
-  cache[from][path] = module
-Pass a different require to each registered module such that
-  require(path) -> cache[current 'module's cwd][path]
-This solves the problem of same paths (e.g. ./a) mapping to the wrong module
-if the cwd is different.
-
-###
-
 fs     = require 'fs'
 path   = require 'path'
 uglify = require 'uglify-js'
+util   = require 'util'
 
 class exports.Squash
   options:
@@ -26,7 +16,7 @@ class exports.Squash
     @node_path = if process.env.NODE_PATH then process.env.NODE_PATH.split(/:|;/g) else []
     @cwd       = path.dirname module.parent.filename
     @ext       = null
-    @cache     = {}
+    @modules   = {}
     @ordered   = []
     
     for name, value of options
@@ -36,34 +26,41 @@ class exports.Squash
   squash: ->
     @require path, @cwd for path in @options.requires
     
-    output = '''
+    output = """
       ;(function() {;
-        var resolve = {};
-        var require = function(path) {
-          if(resolve[path])
-            return resolve[path];
-          else
-            throw new Error('could not find module ' + path);
+        var modules = {};
+        var require_from = function(from) {
+          return (function(name) {
+            if(modules[from] && modules[from][name]) {
+              return modules[from][name];
+            } else {
+              throw new Error('could not find module ' + name);
+            }
+          });
         };
-        var register = function(paths, callback) {
-          var module  = {exports: {}}
+        var register = function(names, directory, callback) {
+          var module  = {exports: {}};
           var exports = module.exports;
-          callback.call(exports, module, exports, require);
+          callback.call(exports, module, exports, require_from(directory));
           
-          for(var i in paths)
-            resolve[paths[i]] = module.exports;
+          for(var from in names) {
+            modules[from] = modules[from] || {};
+            for(var j in names[from]) {
+              var name = names[from][j];
+              modules[from] = modules[from] || {};
+              modules[from][name] = module.exports;
+            }
+          }
         };
-        this.exports = resolve;
-        this.require = require;
-        
-        
-    '''
-    for module in @ordered
+        this.exports = modules;
+        this.require = require_from('#{@cwd.replace /\\/g, '\\\\'}');
+    """
+    for file in @ordered
+      module = @modules[file]
       output += """
-        ;register(['#{module.paths.join '\', \''}'], function(module, exports, require) {;
+        ;register(#{util.inspect module.names}, '#{module.directory.replace /\\/g, '\\\\'}', function(module, exports, require) {;
           #{module.js}
         ;});
-        
       """
     output += '\n;}).call(this);'
     
@@ -75,29 +72,37 @@ class exports.Squash
       output = uglify.uglify.gen_code ast, beautify: true
     return output
   
-  require: (x, from) ->
-    resolved = @resolve x, from
-    if resolved of @cache
-      @cache[resolved].paths.push x
+  require: (name, from) ->
+    # Resolve `path` to a source file, treating `path` as relative to `from`
+    file = @resolve name, from
+    
+    # If this module has already been required, register the path and move on
+    if @modules[file]?
+      names = (@modules[file].names[from] ?= [])
+      names.push name unless name in names
       return
     
-    js  = @extensions[@ext] resolved
-    ast = uglify.parser.parse js
+    # Register the source as a module
+    @modules[file] =
+      directory: path.dirname file
+      js:        fs.readFileSync file, 'utf8'
+      names:    {}
+    @modules[file].names[from] = [name]
     
-    _from = path.dirname resolved
-    @require dependency, _from for dependency in @gather_dependencies ast
+    # Require any of this module's dependencies
+    @require dependency, @modules[file].directory for dependency in @gather_dependencies file
     
-    @cache[resolved] = {resolved, js, paths: [x]}
-    @cache[resolved].paths.push path.relative @cwd, resolved if @cwd != from
-    @ordered.push @cache[resolved]
+    # Finally, register this module in its correct order
+    @ordered.push file
   
-  gather_dependencies: (ast) ->
+  gather_dependencies: (file) ->
     dependencies = []
-    walker = uglify.uglify.ast_walker()
+    ast          = uglify.parser.parse @modules[file].js
+    walker       = uglify.uglify.ast_walker()
     walker.with_walkers call: ([_, name], args) ->
       if name is 'require' and args.length and args[0][0] is 'string'
         dependencies.push args[0][1]
-    , -> walker.walk(ast)
+    , -> walker.walk ast
     return dependencies
   
   resolve: (x, from) ->

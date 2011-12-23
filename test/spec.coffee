@@ -28,7 +28,6 @@ describe 'squash', ->
     context = {}
     (new Function squash.squash()).call context
     
-    expect(context.exports['./requires/a']).toEqual {a: 'a'}
     expect(context.require('./requires/a')).toEqual {a: 'a'}
   
   it 'should detect dependencies in entry requires and catalogue their exports as well', ->
@@ -36,10 +35,6 @@ describe 'squash', ->
     context = {}
     (new Function squash.squash()).call context
     
-    expect(context.exports['./a']).toEqual {a: 'a'}
-    expect(context.require('./a')).toEqual {a: 'a'}
-    
-    expect(context.exports['./requires/b']).toEqual {a: 'a', b: 'b'}
     expect(context.require('./requires/b')).toEqual {a: 'a', b: 'b'}
   
   it 'should compress output when the compress flag is set, but this should not effect the result', ->
