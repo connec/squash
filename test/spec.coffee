@@ -41,14 +41,17 @@ describe 'squash', ->
     expect(context.exports['']['./requires/b']).toEqual {a: 'a', b: 'b'}
     expect(context.require './requires/b').toEqual {a: 'a', b: 'b'}
   
-  it 'should compress output when the compress flag is set, but this should not effect the result', ->
-    squash1  = new Squash requires: ['./requires/a']
-    context1 = {}
-    (new Function squash1.squash()).call context1
+  it 'should compress output when the compress flag is set, and this should not effect the result', ->
+    squash1 = new Squash requires: ['./requires/a']
+    squash2 = new Squash compress: true, requires: ['./requires/a']
     
-    squash2  = new Squash compress: true, requires: ['./requires/a']
+    expect(code1 = squash1.squash()).not.toEqual(code2 = squash2.squash())
+    
+    context1 = {}
+    (new Function code1).call context1
+    
     context2 = {}
-    (new Function squash2.squash()).call context2
+    (new Function code2).call context2
     
     expect(context1.require './requires/a').toEqual context2.require './requires/a'
   
@@ -58,3 +61,13 @@ describe 'squash', ->
     (new Function squash.squash()).call context
     
     expect(context.require './requires/c').toEqual {c: 'c', d: 'd'}
+  
+  it 'should obfuscate directories when obfuscate option is true', ->
+    squash  = new Squash obfuscate: true, requires: ['./requires/b']
+    context = {}
+    (new Function squash.squash()).call context
+    
+    expect(-> context.exports['requires']['./a']).toThrow 'Cannot read property \'./a\' of undefined'
+    
+    expect(context.exports['']['./requires/b']).toEqual {a: 'a', b: 'b'}
+    expect(context.require './requires/b').toEqual {a: 'a', b: 'b'}

@@ -28,6 +28,7 @@ class exports.Squash
     @options =
       compress:   false
       extensions: {}
+      obfuscate:  false
       requires:   []
     @options[key] = value for key, value of options
     
@@ -72,12 +73,24 @@ class exports.Squash
         this.require = require_from('');
     """
     
+    obfuscated = {'': ''}
+    id         = 0
+    obfuscate  = (names) ->
+      result = {}
+      result[obfuscated[from] ?= id++] = names[from] for from of names
+      return result
+    
     for file in @ordered
       module = @modules[file]
       
+      {directory, names} = module
+      if @options.obfuscate
+        directory = (obfuscated[directory] ?= id++)
+        names     = obfuscate names
+      
       # Add the code to register the module
       output += """
-        ;register(#{util.inspect module.names}, #{util.inspect module.directory}, function(module, exports, require) {;
+        ;register(#{util.inspect names}, #{util.inspect directory}, function(module, exports, require) {;
           #{module.js}
         ;});
       """

@@ -14,14 +14,15 @@ usage = """
     squash [options] requires
   
   Options:
-    --coffee        Register the '.coffee' extension to support CoffeeScript
-                    files (requires the 'coffee-script' module)
-    --compress  -c  Compress result with uglify-js (otherwise result is
-                    beautified)
-    --help      -h  Print this notice
-    --file      -f  A file to write the result to
-    --watch     -w  Watch all found requires and rebuild on changes (for best
-                    results an output file should be specified)
+    --coffee         Register the '.coffee' extension to support CoffeeScript
+                     files (requires the 'coffee-script' module)
+    --compress   -c  Compress result with uglify-js (otherwise result is
+                     beautified)
+    --help       -h  Print this notice
+    --file       -f  A file to write the result to
+    --obfuscate  -o  Replaces all non-essential paths with dummy values
+    --watch      -w  Watch all found requires and rebuild on changes (for best
+                     results an output file should be specified)
   
   E.g.:
     squash --coffee -o lib/project.js -w ./src/project
@@ -53,6 +54,8 @@ for arg, i in args
     when '--file', '-f'
       options.file = args[i + 1]
       skip         = true
+    when '--obfuscate', '-o'
+      options.obfuscate = true
     else
       options.requires.push arg
 
