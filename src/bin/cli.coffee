@@ -1,6 +1,6 @@
-{Squash} = require '../lib/squash'
-args     = process.argv.slice 2
+fs       = require 'fs'
 path     = require 'path'
+{Squash} = require '../lib/squash'
 
 usage = """
   
@@ -33,6 +33,7 @@ options =
   file:       null
   requires:   []
 
+args = process.argv.slice 2
 skip = false
 for arg, i in args
   if skip
@@ -50,7 +51,7 @@ for arg, i in args
       console.log usage
       return
     when '--file', '-f'
-      options.file = arg[i + 1]
+      options.file = args[i + 1]
       skip         = true
     else
       options.requires.push arg

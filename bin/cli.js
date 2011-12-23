@@ -1,11 +1,11 @@
 (function() {
-  var Squash, arg, args, coffee, i, options, path, result, skip, squash, usage, _len;
+  var Squash, arg, args, coffee, fs, i, options, path, result, skip, squash, usage, _len;
 
-  Squash = require('../lib/squash').Squash;
-
-  args = process.argv.slice(2);
+  fs = require('fs');
 
   path = require('path');
+
+  Squash = require('../lib/squash').Squash;
 
   usage = "\nSquash makes NodeJS projects work in the browser by takes a number of initial\nrequires and squashing them and their dependencies into a Javascript with a\nbrowser-side require wrapper.\n\nNOTE: Core modules will not work (Squash cannot find their source files).\n\nUsage:\n  squash [options] requires\n\nOptions:\n  --coffee        Register the '.coffee' extension to support CoffeeScript\n                  files (requires the 'coffee-script' module)\n  --compress  -c  Compress result with uglify-js (otherwise result is\n                  beautified)\n  --help      -h  Print this notice\n  --file      -f  A file to write the result to\n  --watch     -w  Watch all found requires and rebuild on changes (for best\n                  results an output file should be specified)\n\nE.g.:\n  squash --coffee -o lib/project.js -w ./src/project";
 
@@ -15,6 +15,8 @@
     file: null,
     requires: []
   };
+
+  args = process.argv.slice(2);
 
   skip = false;
 
@@ -41,7 +43,7 @@
         return;
       case '--file':
       case '-f':
-        options.file = arg[i + 1];
+        options.file = args[i + 1];
         skip = true;
         break;
       default:
