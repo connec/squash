@@ -74,7 +74,7 @@ class exports.Squash
           }
         };
         this.exports = modules;
-        this.require = require_from('#{@cwd.replace /\\/g, '\\\\'}');
+        this.require = require_from(#{util.inspect @cwd});
     """
     
     for file in @ordered
@@ -82,7 +82,7 @@ class exports.Squash
       
       # Add the code to register the module
       output += """
-        ;register(#{util.inspect module.names}, '#{module.directory.replace /\\/g, '\\\\'}', function(module, exports, require) {;
+        ;register(#{util.inspect module.names}, #{util.inspect module.directory}, function(module, exports, require) {;
           #{module.js}
         ;});
       """
