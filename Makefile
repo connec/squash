@@ -1,7 +1,7 @@
 build:
 	coffee -o . -c src
 
-test:
+test: build
 	jasmine-node --coffee test
 
 .PHONY: build test
