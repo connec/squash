@@ -37,6 +37,25 @@ class exports.Squash
       '.js': (x) -> fs.readFileSync x, 'utf8'
     @extensions[ext] = callback for ext, callback of @options.extensions
   
+  # Watch the initial requires and their dependencies for changes and execute
+  # the callback with the reconstructed script.
+  watch: (callback) ->
+    # Require the initial dependencies to build the initial watchlist
+    callback @squash()
+    
+    for file in @ordered
+      do (file) =>
+        skip = false
+        fs.watch file, (event, filename = file) =>
+          return if skip
+          skip = true
+          @modules = {}
+          @ordered = []
+          setTimeout =>
+            callback @squash()
+            skip = false
+          , 25
+  
   # Produce a script combining the initial requires and all their dependencies
   squash: ->
     # Require the initial dependencies
