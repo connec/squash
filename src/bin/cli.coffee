@@ -61,7 +61,7 @@ for arg, i in args
     when '--compress', '-c'
       options.compress = true
     when '--help', '-h'
-      console.log usage()
+      usage()
       return
     when '--file', '-f'
       options.file = args[i + 1]
@@ -75,7 +75,7 @@ for arg, i in args
       options.requires.push arg
 
 if options.requires.length is 0
-  console.log usage()
+  usage()
 else
   squash     = new Squash options
   squash.cwd = path.dirname process.cwd
