@@ -1,6 +1,6 @@
 {
   "name": "squash",
-  "version": "0.0",
+  "version": "0.0.1",
   "description": "Minimal NodeJS browser packager",
   "main": "lib/squash.js",
   "bin": {
