@@ -12,7 +12,7 @@ describe 'squash', ->
     context = {}
     (new Function squash.squash()).call context
     
-    expect(context.exports).toEqual {}
+    expect(context.modules).toEqual {}
     expect(typeof context.require).toEqual 'function'
   
   it 'should throw an error if something is required that does not exist', ->
@@ -28,7 +28,6 @@ describe 'squash', ->
     context = {}
     (new Function squash.squash()).call context
     
-    expect(context.exports['']['./requires/a']).toEqual {a: 'a'}
     expect(context.require './requires/a').toEqual {a: 'a'}
   
   it 'should detect dependencies in entry requires and catalogue their exports as well', ->
@@ -36,9 +35,6 @@ describe 'squash', ->
     context = {}
     (new Function squash.squash()).call context
     
-    expect(context.exports['requires']['./a']).toEqual {a: 'a'}
-    
-    expect(context.exports['']['./requires/b']).toEqual {a: 'a', b: 'b'}
     expect(context.require './requires/b').toEqual {a: 'a', b: 'b'}
   
   it 'should compress output when the compress flag is set, and this should not effect the result', ->
@@ -67,7 +63,5 @@ describe 'squash', ->
     context = {}
     (new Function squash.squash()).call context
     
-    expect(-> context.exports['requires']['./a']).toThrow 'Cannot read property \'./a\' of undefined'
-    
-    expect(context.exports['']['./requires/b']).toEqual {a: 'a', b: 'b'}
+    expect(-> context.modules['requires']['./a']).toThrow 'Cannot read property \'./a\' of undefined'
     expect(context.require './requires/b').toEqual {a: 'a', b: 'b'}

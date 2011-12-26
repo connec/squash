@@ -66,27 +66,33 @@ class exports.Squash
         var require_from = function(from) {
           return (function(name) {
             if(modules[from] && modules[from][name]) {
-              return modules[from][name];
+              if(modules[from][name].initialize)
+                modules[from][name].initialize();
+              return modules[from][name].exports;
             } else {
               throw new Error('could not find module ' + name);
             }
           });
         };
         var register = function(names, directory, callback) {
-          var module  = {exports: {}};
+          var module  = {
+            exports: {},
+            initialize: function() {
+              callback.call(exports, module, exports, require_from(directory));
+              delete module.initialize;
+            }
+          };
           var exports = module.exports;
-          callback.call(exports, module, exports, require_from(directory));
           
           for(var from in names) {
             modules[from] = modules[from] || {};
             for(var j in names[from]) {
               var name = names[from][j];
-              modules[from] = modules[from] || {};
-              modules[from][name] = module.exports;
+              modules[from][name] = module;
             }
           }
         };
-        this.exports = modules;
+        this.modules = modules;
         this.require = require_from('');
     """
     
