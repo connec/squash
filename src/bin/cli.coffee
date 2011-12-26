@@ -4,6 +4,7 @@ path     = require 'path'
 
 options =
   compress:   false
+  cwd:        path.resolve '.'
   extensions: []
   file:       null
   requires:   []

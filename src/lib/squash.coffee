@@ -12,9 +12,6 @@ class exports.Squash
     else
       []
     
-    # The directory Squash was invoked from - used to resolve initial requires
-    @cwd = path.dirname module.parent.filename
-    
     # The extension of the last resolved file
     @ext = null
     
@@ -27,6 +24,7 @@ class exports.Squash
     # Set up the options
     @options =
       compress:   false
+      cwd:        path.dirname module.parent.filename
       extensions: {}
       obfuscate:  false
       requires:   []
@@ -59,7 +57,7 @@ class exports.Squash
   # Produce a script combining the initial requires and all their dependencies
   squash: ->
     # Require the initial dependencies
-    @require path, @cwd for path in @options.requires
+    @require path, @options.cwd for path in @options.requires
     
     # Build the initial boilerplate
     output = """
@@ -132,16 +130,16 @@ class exports.Squash
     
     # If this module has already been required, register the path and move on
     if @modules[file]?
-      names = (@modules[file].names[path.relative @cwd, from] ?= [])
+      names = (@modules[file].names[path.relative @options.cwd, from] ?= [])
       names.push name unless name in names
       return
     
     # Register the source as a module
     @modules[file] =
-      directory: path.relative @cwd, path.dirname file
+      directory: path.relative @options.cwd, path.dirname file
       js:        @extensions[@ext] file
       names:     {}
-    @modules[file].names[path.relative @cwd, from] = [name]
+    @modules[file].names[path.relative @options.cwd, from] = [name]
     
     # Recurse for the module's dependencies
     @require dependency, path.dirname file for dependency in @gather_dependencies file
