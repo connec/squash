@@ -56,7 +56,7 @@
         break;
       case '--help':
       case '-h':
-        console.log(usage);
+        console.log(usage());
         return;
       case '--file':
       case '-f':
@@ -78,7 +78,7 @@
   }
 
   if (options.requires.length === 0) {
-    console.log(usage);
+    console.log(usage());
   } else {
     squash = new Squash(options);
     squash.cwd = path.dirname(process.cwd);
