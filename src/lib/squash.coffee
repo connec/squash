@@ -139,7 +139,7 @@ class exports.Squash
     # Register the source as a module
     @modules[file] =
       directory: path.relative @cwd, path.dirname file
-      js:        fs.readFileSync file, 'utf8'
+      js:        @extensions[@ext] file
       names:     {}
     @modules[file].names[path.relative @cwd, from] = [name]
     
