@@ -38,21 +38,47 @@ class exports.Squash
   # Watch the initial requires and their dependencies for changes and execute
   # the callback with the reconstructed script.
   watch: (callback) ->
-    # Require the initial dependencies to build the initial watchlist
-    callback @squash()
+    # Remember which files we are watching
+    watchers = {}
     
-    for file in @ordered
-      do (file) =>
-        skip = false
-        fs.watch file, (event, filename = file) =>
-          return if skip
-          skip = true
-          @modules = {}
-          @ordered = []
-          setTimeout =>
-            callback @squash()
-            skip = false
-          , 25
+    # Updates the watchers list based on the filenames discovered with the last
+    # `@squash` operation
+    update_watchers = =>
+      new_watchers = {}
+      for file in @ordered
+        if file of watchers
+          # If the file is already being watched just copy the watcher
+          new_watchers[file] = watchers[file]
+          delete watchers[file]
+          continue
+        
+        # Otherwise create a watcher for the file
+        do (file) => # We use `do` to create a `skip` flag for each file
+          skip = false
+          new_watchers[file] = fs.watch file, (event, filename = file) =>
+            return if skip
+            skip = true
+            
+            # Update after a short delay to ensure the file is available for
+            # reading, and to ignore duplicate events
+            setTimeout =>
+              skip     = false
+              @modules = {}
+              @ordered = []
+              result   = @squash()
+              
+              update_watchers()
+              callback result
+            , 25
+      
+      # Clear the watchers for any file no longer in the dependency tree
+      for file, watcher of watchers
+        watcher.close()
+      watchers = new_watchers
+    
+    # Start the first round of watchers
+    callback @squash()
+    update_watchers()
   
   # Produce a script combining the initial requires and all their dependencies
   squash: ->
@@ -61,7 +87,7 @@ class exports.Squash
     
     # Build the initial boilerplate
     output = """
-      ;(function() {;
+      (function() {
         var modules = {};
         var require_from = function(from) {
           return (function(name) {
@@ -96,6 +122,7 @@ class exports.Squash
         this.require = require_from('');
     """
     
+    # Machinery for obfuscating paths
     obfuscated = {'': ''}
     id         = 0
     obfuscate  = (names) ->
@@ -106,6 +133,7 @@ class exports.Squash
     for file in @ordered
       module = @modules[file]
       
+      # Obfuscate the paths if the option is set
       {directory, names} = module
       if @options.obfuscate
         directory = (obfuscated[directory] ?= id++)
@@ -113,9 +141,9 @@ class exports.Squash
       
       # Add the code to register the module
       output += """
-        ;register(#{util.inspect names}, #{util.inspect directory}, function(module, exports, require) {;
+        register(#{util.inspect names}, #{util.inspect directory}, function(module, exports, require) {
           #{module.js}
-        ;});
+        });
       """
     output += '\n;}).call(this);'
     
