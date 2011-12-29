@@ -84,10 +84,14 @@
     squash = new Squash(options);
     squash.cwd = path.dirname(process.cwd);
     if (options.watch) {
-      console.log('Watching file for changes. Press ^C to terminate');
-      squash.watch(function(result) {
-        console.log("rebuid @ " + (new Date));
-        return output(result);
+      console.log('Watching file for changes. Press ^C to terminate\n---');
+      squash.watch(function(error, result) {
+        if (error != null) {
+          return console.log("" + error + "\n---");
+        } else {
+          console.log("rebuild @ " + (new Date) + "\n---");
+          return output(result);
+        }
       });
     } else {
       output(squash.squash());

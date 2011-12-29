@@ -81,9 +81,12 @@ else
   squash     = new Squash options
   squash.cwd = path.dirname process.cwd
   if options.watch
-    console.log 'Watching file for changes. Press ^C to terminate'
-    squash.watch (result) ->
-      console.log "rebuid @ #{new Date}"
-      output result
+    console.log 'Watching file for changes. Press ^C to terminate\n---'
+    squash.watch (error, result) ->
+      if error?
+        console.log "#{error}\n---"
+      else
+        console.log "rebuild @ #{new Date}\n---"
+        output result
   else
     output squash.squash()

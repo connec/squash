@@ -49,7 +49,6 @@ class exports.Squash
         if file of watchers
           # If the file is already being watched just copy the watcher
           new_watchers[file] = watchers[file]
-          delete watchers[file]
           continue
         
         # Otherwise create a watcher for the file
@@ -65,19 +64,22 @@ class exports.Squash
               skip     = false
               @modules = {}
               @ordered = []
-              result   = @squash()
               
-              update_watchers()
-              callback result
+              try
+                result = @squash()
+                update_watchers()
+                callback null, result
+              catch error
+                callback error
             , 25
       
       # Clear the watchers for any file no longer in the dependency tree
       for file, watcher of watchers
-        watcher.close()
+        watcher.close() if file not of new_watchers
       watchers = new_watchers
     
     # Start the first round of watchers
-    callback @squash()
+    callback null, @squash()
     update_watchers()
   
   # Produce a script combining the initial requires and all their dependencies
