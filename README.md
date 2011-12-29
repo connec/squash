@@ -8,19 +8,26 @@ compatibility wrapper.
 
 NOTE: Core modules will not work (Squash cannot find their source files).
 
+Installation:
+
+    npm install squash
+
 Usage:
-  squash [options] requires
+
+    squash [options] requires
 
 Options:
-  --coffee         Register the '.coffee' extension to support CoffeeScript
-                   files (requires the 'coffee-script' module)
-  --compress   -c  Compress result with uglify-js (otherwise result is
-                   beautified)
-  --help       -h  Print this notice
-  --file       -f  A file to write the result to
-  --obfuscate  -o  Replaces all non-essential paths with dummy values
-  --watch      -w  Watch all found requires and rebuild on changes (for best
+
+    --coffee         Register the '.coffee' extension to support CoffeeScript
+                     files (requires the 'coffee-script' module)
+    --compress   -c  Compress result with uglify-js (otherwise result is
+                     beautified)
+    --help       -h  Print this notice
+    --file       -f  A file to write the result to
+    --obfuscate  -o  Replaces all non-essential paths with dummy values
+    --watch      -w  Watch all found requires and rebuild on changes (for best
                    results an output file should be specified)
 
 E.g.:
-  squash --coffee -o lib/project.js -w ./src/project
+
+    squash --coffee -o lib/project.js -w ./src/project
