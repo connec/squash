@@ -30,4 +30,4 @@ Options:
 
 E.g.:
 
-    squash --coffee -o lib/project.js -w ./src/project
+    squash --coffee -f lib/project.js -w ./src/project
