@@ -7,13 +7,13 @@ describe 'squash', ->
     expect(typeof squash.squash()).toEqual 'string'
     expect(squash.squash()).toBeTruthy()
   
-  it 'should produce code that defines exports and require in the given context', ->
+  it 'should produce code that defines require on the given context', ->
     squash  = new Squash
     context = {}
     (new Function squash.squash()).call context
     
-    expect(context.modules).toEqual {}
     expect(typeof context.require).toEqual 'function'
+    expect(context.require.cache).toEqual {}
   
   it 'should throw an error if something is required that does not exist', ->
     squash  = new Squash
@@ -71,5 +71,15 @@ describe 'squash', ->
     context = {}
     (new Function squash.squash()).call context
     
-    expect(-> context.modules['requires']['./a']).toThrow 'Cannot read property \'./a\' of undefined'
+    expect(-> context.require.cache['requires']['./a']).toThrow 'Cannot read property \'./a\' of undefined'
     expect(context.require './requires/b').toEqual {a: 'a', b: 'b'}
+  
+  it 'should suppress `window` in scripts for the purpose of compatibility checks', ->
+    squash  = new Squash requires: ['./requires/e']
+    context = {}
+    
+    # We need eval here so that we know window would otherwise be defined
+    window = {}
+    eval "(function() { #{squash.squash()} }).call(context);"
+    
+    expect(context.require('./requires/e').env).toEqual 'commonjs'

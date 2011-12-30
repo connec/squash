@@ -91,6 +91,14 @@ class exports.Squash
     # Build the initial boilerplate
     output = """
       (function() {
+        if(typeof global == 'undefined') {
+          var global;
+          if(typeof window != 'undefined') {
+            global = window;
+          } else {
+            global = {};
+          }
+        }
         var modules = {};
         var require_from = function(from) {
           return (function(name) {
@@ -107,7 +115,7 @@ class exports.Squash
           var module  = {
             exports: {},
             initialize: function() {
-              callback.call(exports, module, exports, require_from(directory));
+              callback.call(exports, global, module, exports, require_from(directory), undefined);
               delete module.initialize;
             }
           };
@@ -121,8 +129,8 @@ class exports.Squash
             }
           }
         };
-        this.modules = modules;
         this.require = require_from('');
+        this.require.cache = modules;
     """
     
     # Machinery for obfuscating paths
@@ -144,7 +152,7 @@ class exports.Squash
       
       # Add the code to register the module
       output += """
-        register(#{util.inspect names}, #{util.inspect directory}, function(module, exports, require) {
+        register(#{util.inspect names}, #{util.inspect directory}, function(global, module, exports, require, window) {
           #{module.js}
         });
       """
