@@ -12,6 +12,7 @@
     cwd: path.resolve('.'),
     extensions: [],
     file: null,
+    relax: false,
     requires: [],
     watch: false
   };
@@ -25,7 +26,7 @@
   };
 
   usage = function() {
-    return console.log("Squash makes NodeJS projects work in the browser by takes a number of initial\nrequires and squashing them and their dependencies into a Javascript with a\nbrowser-side require wrapper.\n\nNOTE: Core modules will not work (Squash cannot find their source files).\n\nUsage:\n  squash [options] requires\n\nOptions:\n  --coffee         Register the '.coffee' extension to support CoffeeScript\n                   files (requires the 'coffee-script' module)\n  --compress   -c  Compress result with uglify-js (otherwise result is\n                   beautified)\n  --help       -h  Print this notice\n  --file       -f  A file to write the result to\n  --obfuscate  -o  Replaces all non-essential paths with dummy values\n  --watch      -w  Watch all found requires and rebuild on changes (for best\n                   results an output file should be specified)\n\nE.g.:\n  squash --coffee -o lib/project.js -w ./src/project");
+    return console.log("Squash makes NodeJS projects work in the browser by takes a number of initial\nrequires and squashing them and their dependencies into a Javascript with a\nbrowser-side require wrapper.\n\nNOTE: Core modules will not work (Squash cannot find their source files).\n\nUsage:\n  squash [options] <requires...>\n\nOptions:\n  --coffee           Register the '.coffee' extension to support CoffeeScript\n                     files (requires the 'coffee-script' module)\n  --compress     -c  Compress result with uglify-js (otherwise result is\n                     beautified)\n  --help         -h  Print this notice\n  --file <file>  -f  A file to write the result to\n  --obfuscate    -o  Replaces all non-essential paths with dummy values\n  --relax        -r  Continues when modules cannot be found.  Useful if a\n                     core module is required conditionally.\n  --watch        -w  Watch all found requires and rebuild on changes (for best\n                     results an output file should be specified)\n\nE.g.:\n  squash --coffee -f lib/project.js -w ./src/project");
   };
 
   args = process.argv.slice(2);
@@ -67,6 +68,12 @@
       case '--obfuscate':
       case '-o':
         options.obfuscate = true;
+        break;
+      case '--relax':
+      case '-r':
+        options.relax = function(name) {
+          return console.log("Warn: could not find module " + name);
+        };
         break;
       case '--watch':
       case '-w':

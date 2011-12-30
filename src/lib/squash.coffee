@@ -23,11 +23,12 @@ class exports.Squash
     
     # Set up the options
     @options =
-      compress:   false
-      cwd:        path.dirname module.parent.filename
+      compress  : false
+      cwd       : path.dirname module.parent.filename
       extensions: {}
-      obfuscate:  false
-      requires:   []
+      obfuscate : false
+      relax     : false
+      requires  : []
     @options[key] = value for key, value of options
     
     # Set up the extensions
@@ -147,6 +148,7 @@ class exports.Squash
           #{module.js}
         });
       """
+    
     output += '\n;}).call(this);'
     
     # Beautify or compress the output
@@ -161,8 +163,16 @@ class exports.Squash
   
   # Load the details of the given module and recurse for its dependencies
   require: (name, from) ->
-    # Resolve `path` to a source file, treating `path` as relative to `from`
-    file = @resolve name, from
+    try
+      # Resolve `path` to a source file, treating `path` as relative to `from`
+      file = @resolve name, from
+    catch error
+      # If we're 'relaxed', just warn about the missing dependency
+      if @options.relax
+        if typeof @options.relax is 'function'
+          @options.relax name
+        return
+      throw error
     
     # If this module has already been required, register the path and move on
     if @modules[file]?
@@ -173,8 +183,8 @@ class exports.Squash
     # Register the source as a module
     @modules[file] =
       directory: path.relative @options.cwd, path.dirname file
-      js:        @extensions[@ext] file
-      names:     {}
+      js       : @extensions[@ext] file
+      names    : {}
     @modules[file].names[path.relative @options.cwd, from] = [name]
     
     # Recurse for the module's dependencies

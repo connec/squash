@@ -23,6 +23,14 @@ describe 'squash', ->
     expect(-> (new Squash requires: ['non-existant']).squash()).toThrow 'could not find module non-existant'
     expect(-> context.require 'non-existant').toThrow 'could not find module non-existant'
   
+  it 'should ignore non-existant requires during compilation if the relax flag is set', ->
+    squash  = new Squash relax: true
+    context = {}
+    (new Function squash.squash()).call context
+    
+    expect(-> (new Squash relax: true, requires: ['non-existant']).squash()).toBeTruthy()
+    expect(-> context.require 'non-existant').toThrow 'could not find module non-existant'
+  
   it 'should pick up assignments to `module.exports` for given entry requires', ->
     squash  = new Squash requires: ['./requires/a']
     context = {}
