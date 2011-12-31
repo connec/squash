@@ -88,6 +88,12 @@ project.do_awesome_things();
   (also `this === exports === modules.exports`).  Additional properties may be
   added to `module` to improve compatibility in future versions.
 
+* For the above reason, libraries such as jQuery that have vastly different
+  dependencies on Node (`jsdom` etc.) than in the browser (DOM) do not work
+  terribly well 'cross-platform' in this way.  The easiest option here is to use
+  the `global` variable to access the browser's `window` object, allowing you to
+  include the library normally in the browser or attach it to `global` in Node.
+
 * There is no support for core Node modules such as `path`, `fs`, etc.
 
 * It doesn't attempt to provide any 'resolve' functionality inside the package,
