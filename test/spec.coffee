@@ -4,8 +4,9 @@ describe 'squash', ->
   
   it 'should produce the boilerplate when no inputs are given', ->
     squash = new Squash
-    expect(typeof squash.squash()).toEqual 'string'
-    expect(squash.squash()).toBeTruthy()
+    result = squash.squash()
+    expect(typeof result).toEqual 'string'
+    expect(result).toBeTruthy()
   
   it 'should produce code that defines require on the given context', ->
     squash  = new Squash
@@ -24,12 +25,17 @@ describe 'squash', ->
     expect(-> context.require 'non-existant').toThrow 'could not find module non-existant'
   
   it 'should ignore non-existant requires during compilation if the relax flag is set', ->
-    squash  = new Squash relax: true
-    context = {}
-    (new Function squash.squash()).call context
+    squash = new Squash relax: (-> return 'error'), requires: ['non-existant']
+    result = squash.squash()
     
-    expect(-> (new Squash relax: true, requires: ['non-existant']).squash()).toBeTruthy()
-    expect(-> context.require 'non-existant').toThrow 'could not find module non-existant'
+    expect(typeof result).toEqual 'string'
+    expect(result).toBeTruthy()
+    
+    context = {}
+    (new Function result).call context
+    
+    expect(context.require).toBeTruthy()
+    expect(context.require 'non-existant').toEqual 'error'
   
   it 'should pick up assignments to `module.exports` for given entry requires', ->
     squash  = new Squash requires: ['./requires/a']

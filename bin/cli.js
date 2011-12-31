@@ -71,8 +71,11 @@
         break;
       case '--relax':
       case '-r':
-        options.relax = function(name) {
-          return console.log("Warn: could not find module " + name);
+        options.relax = function(name, from) {
+          var message;
+          message = "Warn: could not find module " + name;
+          if (!options.obfuscate) message += " from " + from;
+          return console.log(message);
         };
         break;
       case '--watch':

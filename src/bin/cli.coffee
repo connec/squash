@@ -73,8 +73,11 @@ for arg, i in args
     when '--obfuscate', '-o'
       options.obfuscate = true
     when '--relax', '-r'
-      options.relax = (name) ->
-        console.log "Warn: could not find module #{name}"
+      options.relax = (name, from) ->
+        message = "Warn: could not find module #{name}"
+        unless options.obfuscate
+          message += " from #{from}"
+        console.log message
     when '--watch', '-w'
       options.watch = true
     else

@@ -91,6 +91,7 @@ class exports.Squash
     # Build the initial boilerplate
     output = """
       (function() {
+        var root = this, modules, require_from, register, error;
         if(typeof global == 'undefined') {
           var global;
           if(typeof window != 'undefined') {
@@ -99,28 +100,27 @@ class exports.Squash
             global = {};
           }
         }
-        var modules = {};
-        var require_from = function(from) {
+        modules = {};
+        require_from = function(from) {
           return (function(name) {
             if(modules[from] && modules[from][name]) {
-              if(modules[from][name].initialize)
+              if(modules[from][name].initialize) {
                 modules[from][name].initialize();
+              }
               return modules[from][name].exports;
             } else {
-              throw new Error('could not find module ' + name);
+              return error(name, from);
             }
           });
         };
-        var register = function(names, directory, callback) {
+        register = function(names, directory, callback) {
           var module  = {
             exports: {},
             initialize: function() {
-              callback.call(exports, global, module, exports, require_from(directory), undefined);
+              callback.call(module.exports, global, module, module.exports, require_from(directory), undefined);
               delete module.initialize;
             }
           };
-          var exports = module.exports;
-          
           for(var from in names) {
             modules[from] = modules[from] || {};
             for(var j in names[from]) {
@@ -129,8 +129,18 @@ class exports.Squash
             }
           }
         };
-        this.require = require_from('');
-        this.require.cache = modules;
+        error = 
+    """
+    if @options.relax
+      if typeof @options.relax is 'function'
+        output += "#{String @options.relax};"
+      else
+        output += 'function() { return null; };'
+    else
+      output += 'function(name, from) { throw new Error(\'could not find module \' + name); };'
+    output += """
+      root.require = require_from('');
+      root.require.cache = modules;
     """
     
     # Machinery for obfuscating paths
@@ -178,7 +188,7 @@ class exports.Squash
       # If we're 'relaxed', just warn about the missing dependency
       if @options.relax
         if typeof @options.relax is 'function'
-          @options.relax name
+          @options.relax name, from
         return
       throw error
     
