@@ -8,7 +8,7 @@ options =
   extensions: []
   file      : null
   relax     : false
-  requires  : []
+  requires  : {}
   watch     : false
 
 output = (result) ->
@@ -53,36 +53,39 @@ for arg, i in args
     skip = false
     continue
   
-  if stop
-    options.requires.push arg
-    continue
+  unless stop
+    switch arg
+      when '--coffee'
+        coffee = require 'coffee-script'
+        options.extensions['.coffee'] = (x) ->
+          coffee.compile fs.readFileSync x, 'utf8'
+      when '--compress', '-c'
+        options.compress = true
+      when '--help', '-h'
+        usage()
+        return
+      when '--file', '-f'
+        options.file = args[i + 1]
+        skip         = true
+      when '--obfuscate', '-o'
+        options.obfuscate = true
+      when '--relax', '-r'
+        options.relax = new Function 'name', 'from', """
+          var message = 'Warn: could not find module ' + name;
+          #{if options.obfuscate then '' else 'message += \' from \' + from;'}
+          console.log(message);
+        """
+      when '--watch', '-w'
+        options.watch = true
+      else
+        stop = true
   
-  switch arg
-    when '--coffee'
-      coffee = require 'coffee-script'
-      options.extensions['.coffee'] = (x) ->
-        coffee.compile fs.readFileSync x, 'utf8'
-    when '--compress', '-c'
-      options.compress = true
-    when '--help', '-h'
-      usage()
-      return
-    when '--file', '-f'
-      options.file = args[i + 1]
-      skip         = true
-    when '--obfuscate', '-o'
-      options.obfuscate = true
-    when '--relax', '-r'
-      options.relax = new Function 'name', 'from', """
-        var message = 'Warn: could not find module ' + name;
-        #{if options.obfuscate then '' else 'message += \' from \' + from;'}
-        console.log(message);
-      """
-    when '--watch', '-w'
-      options.watch = true
+  if stop
+    if '=' in arg
+      arg = arg.split '='
+      options.requires[arg[0]] = arg[1]
     else
-      stop = true
-      options.requires.push arg
+      options.require[arg] = arg
 
 if options.requires.length is 0
   usage()

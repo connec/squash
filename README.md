@@ -21,7 +21,7 @@ as expected on the browser or even in Node.
 
 ### Command Line
 
-    squash [options] <requires...>
+    squash [options] <require[=alias]...>
 
 #### Options
 
@@ -40,9 +40,10 @@ as expected on the browser or even in Node.
 #### Example
 
 To bundle `src/index.coffee` and all its dependencies to `lib/project.js` every
-time a dependency changes:
+time a dependency changes, and make it available as `window.project` (without
+the alias, it would be as `window['./src']`):
 
-    squash --coffee -f lib/project.js -w ./src
+    squash --coffee -f lib/project.js -w ./src=project
 
 ### API
 

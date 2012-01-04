@@ -28,7 +28,7 @@ class exports.Squash
       extensions: {}
       obfuscate : false
       relax     : false
-      requires  : []
+      requires  : {}
     @options[key] = value for key, value of options
     
     # Set up the extensions
@@ -86,7 +86,7 @@ class exports.Squash
   # Produce a script combining the initial requires and all their dependencies
   squash: ->
     # Require the initial dependencies
-    @require path, @options.cwd for path in @options.requires
+    @require path, @options.cwd for path of @options.requires
     
     # Build the initial boilerplate
     output = """
@@ -135,13 +135,9 @@ class exports.Squash
       if typeof @options.relax is 'function'
         output += "#{String @options.relax};"
       else
-        output += 'function() { return null; };'
+        output += 'function() { return null; };\n'
     else
-      output += 'function(name, from) { throw new Error(\'could not find module \' + name); };'
-    output += """
-      root.require = require_from('');
-      root.require.cache = modules;
-    """
+      output += 'function(name, from) { throw new Error(\'could not find module \' + name); };\n'
     
     # Machinery for obfuscating paths
     obfuscated = {'': ''}
@@ -162,10 +158,16 @@ class exports.Squash
       
       # Add the code to register the module
       output += """
+        
         register(#{util.inspect names}, #{util.inspect directory}, function(global, module, exports, require, window) {
           #{module.js}
         });
+        
       """
+    
+    # Add the code to register the initial requires on the root object
+    for _, alias of @options.requires
+      output += "root['#{alias}'] = require_from('')('#{alias}');\n"
     
     output += '\n;}).call(this);'
     
@@ -203,6 +205,9 @@ class exports.Squash
       directory: path.relative @options.cwd, path.dirname file
       js       : @extensions[@ext] file
       names    : {}
+    
+    if from is @options.cwd and name of @options.requires
+      name = @options.requires[name]
     @modules[file].names[path.relative @options.cwd, from] = [name]
     
     # Recurse for the module's dependencies

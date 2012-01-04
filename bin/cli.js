@@ -1,5 +1,6 @@
 (function() {
-  var Squash, arg, args, coffee, fs, i, options, output, path, skip, squash, stop, usage, _len;
+  var Squash, arg, args, coffee, fs, i, options, output, path, skip, squash, stop, usage, _len,
+    __indexOf = Array.prototype.indexOf || function(item) { for (var i = 0, l = this.length; i < l; i++) { if (i in this && this[i] === item) return i; } return -1; };
 
   fs = require('fs');
 
@@ -13,7 +14,7 @@
     extensions: [],
     file: null,
     relax: false,
-    requires: [],
+    requires: {},
     watch: false
   };
 
@@ -41,45 +42,50 @@
       skip = false;
       continue;
     }
-    if (stop) {
-      options.requires.push(arg);
-      continue;
+    if (!stop) {
+      switch (arg) {
+        case '--coffee':
+          coffee = require('coffee-script');
+          options.extensions['.coffee'] = function(x) {
+            return coffee.compile(fs.readFileSync(x, 'utf8'));
+          };
+          break;
+        case '--compress':
+        case '-c':
+          options.compress = true;
+          break;
+        case '--help':
+        case '-h':
+          usage();
+          return;
+        case '--file':
+        case '-f':
+          options.file = args[i + 1];
+          skip = true;
+          break;
+        case '--obfuscate':
+        case '-o':
+          options.obfuscate = true;
+          break;
+        case '--relax':
+        case '-r':
+          options.relax = new Function('name', 'from', "var message = 'Warn: could not find module ' + name;\n" + (options.obfuscate ? '' : 'message += \' from \' + from;') + "\nconsole.log(message);");
+          break;
+        case '--watch':
+        case '-w':
+          options.watch = true;
+          break;
+        default:
+          stop = true;
+      }
     }
-    switch (arg) {
-      case '--coffee':
-        coffee = require('coffee-script');
-        options.extensions['.coffee'] = function(x) {
-          return coffee.compile(fs.readFileSync(x, 'utf8'));
-        };
-        break;
-      case '--compress':
-      case '-c':
-        options.compress = true;
-        break;
-      case '--help':
-      case '-h':
-        usage();
-        return;
-      case '--file':
-      case '-f':
-        options.file = args[i + 1];
-        skip = true;
-        break;
-      case '--obfuscate':
-      case '-o':
-        options.obfuscate = true;
-        break;
-      case '--relax':
-      case '-r':
-        options.relax = new Function('name', 'from', "var message = 'Warn: could not find module ' + name;\n" + (options.obfuscate ? '' : 'message += \' from \' + from;') + "\nconsole.log(message);");
-        break;
-      case '--watch':
-      case '-w':
-        options.watch = true;
-        break;
-      default:
-        stop = true;
-        options.requires.push(arg);
+    if (stop) {
+      if (__indexOf.call(arg, '=') >= 0) {
+        arg = arg.split('=');
+        options.requires[arg[0]] = arg[1];
+      } else {
+        options.require[arg] = arg;
+      }
     }
   }
 
