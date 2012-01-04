@@ -84,7 +84,7 @@
         arg = arg.split('=');
         options.requires[arg[0]] = arg[1];
       } else {
-        options.require[arg] = arg;
+        options.requires[arg] = arg;
       }
     }
   }
