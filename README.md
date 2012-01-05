@@ -48,7 +48,7 @@ the alias, it would be as `window['./src']`):
 ### API
 
 ```javascript
-# build.coffee
+// build.js
 var fs     = require('fs'),
     Squash = require('squash').Squash,
     squash = new Squash({ requires: {'./src': 'project'} });
