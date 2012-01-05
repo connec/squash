@@ -90,11 +90,6 @@ project.do_awesome_things();
 
 * There is no support for core Node modules such as `path`, `fs`, etc.
 
-* It doesn't attempt to provide any 'resolve' functionality inside the package,
-  so only the given initial dependencies will be available using `require`
-  (though other dependencies can be found in `require.cache` if you're
-  desparate).
-
 ## Bugs etc.
 
 If you find a bug or think something could be done better don't hesitate to
