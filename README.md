@@ -49,11 +49,10 @@ the alias, it would be as `window['./src']`):
 
 ```javascript
 # build.coffee
-fs           = require 'fs'
-{Squash}     = require 'squash'
-
-squash = new Squash requires: {'./src': 'project'}
-fs.writeFileSync 'lib/project.js', squash.squash()
+var fs     = require('fs'),
+    Squash = require('squash').Squash,
+    squash = new Squash({ requires: {'./src': 'project'} });
+fs.writeFileSync('lib/project.js', squash.squash(), 'utf8');
 ```
 
 ### Browser
