@@ -8,9 +8,9 @@ class exports.Squash
   constructor: (options = {}) ->
     # Directories to search for node_modules
     @node_path = if process.env.NODE_PATH
-      process.env.NODE_PATH.split (if '\\' in process.env.NODE_PATH then /;/g else /:/g)
-    else
-      []
+        process.env.NODE_PATH.split (if '\\' in process.env.NODE_PATH then /;/g else /:/g)
+      else
+        []
     
     # The extension of the last resolved file
     @ext = null
