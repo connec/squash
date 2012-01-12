@@ -101,9 +101,10 @@ class exports.Squash
           }
         }
         modules = {};
-        require_from = function(from) {
+        require_from = function(parent, from) {
           return (function(name) {
             if(modules[from] && modules[from][name]) {
+              modules[from][name].parent = parent;
               if(modules[from][name].initialize) {
                 modules[from][name].initialize();
               }
@@ -117,9 +118,10 @@ class exports.Squash
           var module  = {
             exports: {},
             initialize: function() {
-              callback.call(module.exports, global, module, module.exports, require_from(directory), undefined);
+              callback.call(module.exports, global, module, module.exports, require_from(module, directory), undefined);
               delete module.initialize;
-            }
+            },
+            parent: null
           };
           for(var from in names) {
             modules[from] = modules[from] || {};
@@ -167,7 +169,7 @@ class exports.Squash
     
     # Add the code to register the initial requires on the root object
     for _, alias of @options.requires
-      output += "root['#{alias}'] = require_from('')('#{alias}');\n"
+      output += "root['#{alias}'] = require_from(null, '')('#{alias}');\n"
     
     output += '\n;}).call(this);'
     

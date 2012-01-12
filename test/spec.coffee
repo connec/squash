@@ -1,4 +1,5 @@
 {Squash} = require '../lib/squash'
+util     = require 'util'
 
 describe 'squash', ->
   
@@ -111,3 +112,17 @@ describe 'squash', ->
     eval "(function() { #{squash.squash()} }).call(context);"
     
     expect(context).toEqual {'./requires/e': {env: 'commonjs'}}
+  
+  it 'should expose the parent module', ->
+    squash  = new Squash requires: {'./requires/g'}
+    context = {}
+    (new Function squash.squash()).call context
+    
+    expected =
+      './requires/g':
+        g: 'g'
+        f:
+          f: 'f'
+    expected['./requires/g'].f.parent = expected['./requires/g']
+    
+    expect(context).toEqual expected
