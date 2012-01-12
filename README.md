@@ -47,38 +47,31 @@ the alias, it would be as `window['./src']`):
 
 ### API
 
-```coffeescript
-# build.coffee
-coffeescript = require 'coffee-script'
-fs           = require 'fs'
-{Squash}     = require 'squash'
-
-squash = new Squash requires: ['./src'], extensions:
-  '.coffee': (x) -> coffeescript.compile fs.readFileSync x, 'utf8'
-fs.writeFileSync 'lib/project.js', squash.squash()
+```javascript
+// build.js
+var fs     = require('fs'),
+    Squash = require('squash').Squash,
+    squash = new Squash({ requires: {'./src': 'project'} });
+fs.writeFileSync('lib/project.js', squash.squash(), 'utf8');
 ```
 
 ### Browser
 
-Having built your `lib/project.js` you can run your project in the browser with:
+Having built your `lib/project.js` as above, you can run your project in the browser with:
 
 ```html
 <script src='lib/project.js'></script>
 <script>
-  var project = require('./src');
   project.do_awesome_things();
 </script>
 ```
-
-If, for some reason, you want access to all the dependent modules they are
-available in `require.cache`.
 
 ### Node
 
 You can also load packages with Node should you wish:
 
-```coffeescript
-project = require('./lib/project').require './src'
+```javascript
+var project = require('./lib/project').project;
 project.do_awesome_things();
 ```
 
@@ -96,11 +89,6 @@ project.do_awesome_things();
   include the library normally in the browser or attach it to `global` in Node.
 
 * There is no support for core Node modules such as `path`, `fs`, etc.
-
-* It doesn't attempt to provide any 'resolve' functionality inside the package,
-  so only the given initial dependencies will be available using `require`
-  (though other dependencies can be found in `require.cache` if you're
-  desparate).
 
 ## Bugs etc.
 
