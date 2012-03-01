@@ -176,7 +176,7 @@ class exports.Squash
     # Beautify or compress the output
     ast = uglify.parser.parse output
     if @options.compress
-      ast    = uglify.uglify.ast_squeeze uglify.uglify.ast_mangle ast
+      ast    = uglify.uglify.ast_squeeze ast
       output = uglify.uglify.gen_code ast
     else
       output = uglify.uglify.gen_code ast, beautify: true
