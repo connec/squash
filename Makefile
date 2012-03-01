@@ -3,3 +3,5 @@ build:
 
 test: build
 	node node_modules/jasmine-node/bin/jasmine-node --coffee test
+
+.PHONY: build test
