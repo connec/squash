@@ -1,5 +1,5 @@
 name:            squash
-version:         0.0.10
+version:         0.0.11
 description:     Minimal NodeJS browser packager
 main:            lib/squash.js
 license:         WTFPL

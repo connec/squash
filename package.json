@@ -1,6 +1,6 @@
 {
   "name": "squash",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "Minimal NodeJS browser packager",
   "main": "lib/squash.js",
   "license": "WTFPL",
@@ -8,10 +8,10 @@
     "squash": "./bin/squash"
   },
   "dependencies": {
-    "uglify-js": "1.3.x"
+    "uglify-js": "1.x.x"
   },
   "devDependencies": {
-    "coffee-script": "1.3.x",
+    "coffee-script": "1.x.x",
     "plantation": "0.0.1"
   },
   "repository": {
