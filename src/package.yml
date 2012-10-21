@@ -1,0 +1,15 @@
+name:            squash
+version:         0.0.10
+description:     Minimal NodeJS browser packager
+main:            lib/squash.js
+license:         WTFPL
+bin:
+  squash:        ./bin/squash
+dependencies:
+  uglify-js:     1.x.x
+devDependencies:
+  coffee-script: 1.x.x
+  plantation:    0.0.1
+repository:
+  type:          git
+  url:           http://github.com/connec/squash.git

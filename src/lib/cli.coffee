@@ -1,15 +1,15 @@
 fs       = require 'fs'
 path     = require 'path'
-{Squash} = require '../lib/squash'
+{Squash} = require './squash'
 
 options =
-  compress  : false
-  cwd       : path.resolve '.'
+  compress:   false
+  cwd:        path.resolve '.'
   extensions: []
-  file      : null
-  relax     : false
-  requires  : {}
-  watch     : false
+  file:       null
+  relax:      false
+  requires:   {}
+  watch:      false
 
 output = (result) ->
   if options.file
@@ -17,17 +17,17 @@ output = (result) ->
   else
     console.log result
 
-usage = -> 
+usage = ->
   console.log """
-    Squash makes NodeJS projects work in the browser by takes a number of initial
+    Squash makes NodeJS projects work in the browser by taking a number of initial
     requires and squashing them and their dependencies into a Javascript with a
     browser-side require wrapper.
-    
+
     NOTE: Core modules will not work (Squash cannot find their source files).
-    
+
     Usage:
       squash [options] <requires...>
-    
+
     Options:
       --coffee           Register the '.coffee' extension to support CoffeeScript
                          files (requires the 'coffee-script' module)
@@ -40,7 +40,7 @@ usage = ->
                          core module is required conditionally.
       --watch        -w  Watch all found requires and rebuild on changes (for best
                          results an output file should be specified)
-    
+
     E.g.:
       squash --coffee -f lib/project.js -w ./src/project
   """
@@ -52,7 +52,7 @@ for arg, i in args
   if skip
     skip = false
     continue
-  
+
   unless stop
     switch arg
       when '--coffee'
@@ -79,7 +79,7 @@ for arg, i in args
         options.watch = true
       else
         stop = true
-  
+
   if stop
     if '=' in arg
       arg = arg.split '='

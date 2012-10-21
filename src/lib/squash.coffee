@@ -11,16 +11,16 @@ class exports.Squash
         process.env.NODE_PATH.split (if '\\' in process.env.NODE_PATH then /;/g else /:/g)
       else
         []
-    
+
     # The extension of the last resolved file
     @ext = null
-    
+
     # The details of all the discovered modules
     @modules = {}
-    
+
     # Contains the module file names in the order they should be output
     @ordered = []
-    
+
     # Set up the options
     @options =
       compress  : false
@@ -30,18 +30,18 @@ class exports.Squash
       relax     : false
       requires  : {}
     @options[key] = value for key, value of options
-    
+
     # Set up the extensions
     @extensions =
       '.js': (x) -> fs.readFileSync x, 'utf8'
     @extensions[ext] = callback for ext, callback of @options.extensions
-  
+
   # Watch the initial requires and their dependencies for changes and execute
   # the callback with the reconstructed script.
   watch: (callback) ->
     # Remember which files we are watching
     watchers = {}
-    
+
     # Updates the watchers list based on the filenames discovered with the last
     # `@squash` operation
     update_watchers = =>
@@ -51,21 +51,21 @@ class exports.Squash
           # If the file is already being watched just copy the watcher
           new_watchers[file] = watchers[file]
           continue
-        
+
         # Otherwise create a watcher for the file
         do (file) => # We use `do` to create a `skip` flag for each file
           skip = false
           new_watchers[file] = fs.watch file, (event, filename = file) =>
             return if skip
             skip = true
-            
+
             # Update after a short delay to ensure the file is available for
             # reading, and to ignore duplicate events
             setTimeout =>
               skip     = false
               @modules = {}
               @ordered = []
-              
+
               try
                 result = @squash()
                 update_watchers()
@@ -73,21 +73,21 @@ class exports.Squash
               catch error
                 callback error
             , 25
-      
+
       # Clear the watchers for any file no longer in the dependency tree
       for file, watcher of watchers
         watcher.close() if file not of new_watchers
       watchers = new_watchers
-    
+
     # Start the first round of watchers
     callback null, @squash()
     update_watchers()
-  
+
   # Produce a script combining the initial requires and all their dependencies
   squash: ->
     # Require the initial dependencies
-    @require path, @options.cwd for path of @options.requires
-    
+    @require _path, @options.cwd for _path of @options.requires
+
     # Build the initial boilerplate
     output = """
       (function() {
@@ -131,7 +131,7 @@ class exports.Squash
             }
           }
         };
-        error = 
+        error =
     """
     if @options.relax
       if typeof @options.relax is 'function'
@@ -140,7 +140,7 @@ class exports.Squash
         output += 'function() { return null; };\n'
     else
       output += 'function(name, from) { throw new Error(\'could not find module \' + name); };\n'
-    
+
     # Machinery for obfuscating paths
     obfuscated = {'': ''}
     id         = 0
@@ -148,31 +148,31 @@ class exports.Squash
       result = {}
       result[obfuscated[from] ?= id++] = names[from] for from of names
       return result
-    
+
     for file in @ordered
       module = @modules[file]
-      
+
       # Obfuscate the paths if the option is set
       {directory, names} = module
       if @options.obfuscate
         directory = (obfuscated[directory] ?= id++)
         names     = obfuscate names
-      
+
       # Add the code to register the module
       output += """
-        
+
         register(#{util.inspect names}, #{util.inspect directory}, function(global, module, exports, require, window) {
           #{module.js}
         });
-        
+
       """
-    
+
     # Add the code to register the initial requires on the root object
     for _, alias of @options.requires
       output += "root['#{alias}'] = require_from(null, '')('#{alias}');\n"
-    
+
     output += '\n;}).call(this);'
-    
+
     # Beautify or compress the output
     ast = uglify.parser.parse output
     if @options.compress
@@ -180,9 +180,9 @@ class exports.Squash
       output = uglify.uglify.gen_code ast
     else
       output = uglify.uglify.gen_code ast, beautify: true
-    
+
     return output
-  
+
   # Load the details of the given module and recurse for its dependencies
   require: (name, from) ->
     try
@@ -195,29 +195,29 @@ class exports.Squash
           @options.relax name, from
         return
       throw error
-    
+
     # If this module has already been required, register the path and move on
     if @modules[file]?
       names = (@modules[file].names[path.relative @options.cwd, from] ?= [])
       names.push name unless name in names
       return
-    
+
     # Register the source as a module
     @modules[file] =
       directory: path.relative @options.cwd, path.dirname file
       js       : @extensions[@ext] file
       names    : {}
-    
+
     if from is @options.cwd and name of @options.requires
       name = @options.requires[name]
     @modules[file].names[path.relative @options.cwd, from] = [name]
-    
+
     # Recurse for the module's dependencies
     @require dependency, path.dirname file for dependency in @gather_dependencies file
-    
+
     # Finally, register this module in its correct order
     @ordered.push file
-  
+
   # Find required dependencies using a walk of the AST
   gather_dependencies: (file) ->
     dependencies = []
@@ -230,58 +230,61 @@ class exports.Squash
     , ->
       walker.walk ast
     return dependencies
-  
+
   # Attempts to resolve a module's file given the required string and a base location
   resolve: (name, from) ->
     # Compute the absolute path
     file = path.resolve from, name
-    
+
     # If it's a relative import...
     if name[0...1] is '/' or name[0...2] is './' or name[0...3] is '../'
       # Try to load it as a file
       return resolved if resolved = @load_as_file file
-      
+
       # Try to load it as a directory
       return resolved if resolved = @load_as_directory file
-    
+
     # Otherwise, try to load it as a node module
     return resolved if resolved = @load_node_module name, from
-    
+
     # If we reach here the module could not be found, throw an error
     throw new Error "could not find module #{name}"
-  
+
   # Attempt to load the given path as a file
   load_as_file: (file) ->
-    if path.existsSync(file) and fs.statSync(file).isFile()
+    if fs.existsSync(file) and fs.statSync(file).isFile()
       # The path exists and is a file, return it unchanged
       @ext = file[file.lastIndexOf('.')..] || '.js'
       return file
-    for ext of @extensions
-      # Try registered extensions
-      return resolved if path.existsSync (resolved = file + (@ext = ext))
+
+    # Try registered extensions
+    for ext of @extensions then if fs.existsSync (resolved = file + ext)
+      @ext = ext
+      return resolved
+
     return false
-  
+
   # Attempt to load the given path as a directory
   load_as_directory: (dir) ->
     # Attempt to load the `main` attribute from package.json
-    if path.existsSync (package = path.resolve dir, 'package.json')
-      package = JSON.parse fs.readFileSync package, 'utf8'
-      if package.main
-        name = path.resolve dir, package.main
+    if fs.existsSync (pkg = path.resolve dir, 'package.json')
+      pkg = JSON.parse fs.readFileSync pkg, 'utf8'
+      if pkg.main
+        name = path.resolve dir, pkg.main
         return resolved if resolved = @load_as_file name
         return resolved if resolved = @load_as_directory name
     for ext of @extensions
       # Try registered extensions with an 'index' file
-      return resolved if path.existsSync (resolved = path.resolve dir, 'index' + (@ext = ext))
+      return resolved if fs.existsSync (resolved = path.resolve dir, 'index' + (@ext = ext))
     return false
-  
+
   # Attempt to load the given path as a node module
   load_node_module: (module, from) ->
     for dir in @node_modules_dirs(from).concat @node_path
       return resolved if resolved = @load_as_file path.join dir, module
       return resolved if resolved = @load_as_directory path.join dir, module
     return false
-  
+
   # Generate an array of 'node_modules' paths for the current directory
   node_modules_dirs: (from) ->
     parts = from.split /\\|\//g
