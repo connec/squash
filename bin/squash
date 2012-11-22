@@ -1,7 +1,3 @@
 #!/usr/bin/env node
 
-var path = require('path')
-  , fs   = require('fs')
-  , cli  = path.join(__dirname, '../lib/cli');
-
-require(cli);
+require('../lib/cli');

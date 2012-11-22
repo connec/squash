@@ -1,1 +1,1 @@
-require('plantation').tasks()
+do require 'plantation'
