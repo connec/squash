@@ -93,12 +93,7 @@ class exports.Squash
       (function() {
         var root = this, modules, require_from, register, error;
         if(typeof global == 'undefined') {
-          var global;
-          if(typeof window != 'undefined') {
-            global = window;
-          } else {
-            global = {};
-          }
+          var global = typeof window === 'undefined' ? root : window;
         }
         modules = {};
         require_from = function(parent, from) {
