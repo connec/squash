@@ -1,6 +1,6 @@
 {
   "name": "squash",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "Minimal NodeJS browser packager",
   "main": "lib/squash.js",
   "license": "WTFPL",
