@@ -12,7 +12,7 @@
   },
   "devDependencies": {
     "coffee-script": "1.x.x",
-    "plantation": "0.0.3"
+    "plantation": "0.0.15"
   },
   "repository": {
     "type": "git",

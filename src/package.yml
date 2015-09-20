@@ -9,7 +9,7 @@ dependencies:
   uglify-js:     1.x.x
 devDependencies:
   coffee-script: 1.x.x
-  plantation:    0.0.3
+  plantation:    0.0.15
 repository:
   type:          git
   url:           http://github.com/connec/squash.git
