@@ -11,8 +11,13 @@
     "uglify-js": "1.x.x"
   },
   "devDependencies": {
+    "chai": "^2.3.0",
     "coffee-script": "1.x.x",
-    "plantation": "0.0.15"
+    "mocha": "^2.5.3",
+    "plantation": "0.0.15",
+    "sinon": "^1.17.6",
+    "sinon-chai": "^2.8.0",
+    "yaml-js": "^0.1.1"
   },
   "repository": {
     "type": "git",
