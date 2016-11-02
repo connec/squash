@@ -91,7 +91,7 @@ if options.requires.length is 0
   usage()
 else
   squash     = new Squash options
-  squash.cwd = path.dirname process.cwd
+  squash.cwd = path.dirname process.cwd()
   if options.watch
     console.log 'Watching file for changes. Press ^C to terminate\n---'
     squash.watch (error, result) ->
