@@ -169,14 +169,13 @@ class exports.Squash
     output += '\n;}).call(this);'
 
     # Beautify or compress the output
-    ast = uglify.parser.parse output
-    if @options.compress
-      ast    = uglify.uglify.ast_squeeze ast
-      output = uglify.uglify.gen_code ast
-    else
-      output = uglify.uglify.gen_code ast, beautify: true
+    output = uglify.minify output,
+      compress:   @options.compress
+      mangle:     false
+      output:
+        beautify: not @options.compress
 
-    return output
+    return output.code
 
   # Load the details of the given module and recurse for its dependencies
   require: (name, from) ->
@@ -216,14 +215,15 @@ class exports.Squash
   # Find required dependencies using a walk of the AST
   gather_dependencies: (file) ->
     dependencies = []
-    ast          = uglify.parser.parse @modules[file].js
-    walker       = uglify.uglify.ast_walker()
-    walker.with_walkers call: ([_, name], args) ->
-      # Add a dependency if the function is 'require' and the first argument is a string
-      if name is 'require' and args.length and args[0][0] is 'string'
-        dependencies.push args[0][1]
-    , ->
-      walker.walk ast
+    { ast }      = uglify.minify { "#{file}": @modules[file].js },
+      parse:    {}
+      compress: false
+      mangle:   false
+      output:
+        ast:    true
+        code:   false
+    ast.walk new uglify.TreeWalker (node) ->
+      dependencies.push dependency if dependency = getDependency node
     return dependencies
 
   # Attempts to resolve a module's file given the required string and a base location
@@ -290,3 +290,14 @@ class exports.Squash
       continue if parts[i] is 'node_modules'
       dirs.push path.join.apply path, parts[0..i].concat ['node_modules']
     return dirs
+
+getDependency = (node) ->
+  return null unless node instanceof uglify.AST_Call
+
+  return null unless node.expression instanceof uglify.AST_SymbolRef
+  return null unless node.expression.name is 'require'
+
+  return null unless node.args.length is 1
+  return null unless node.args[0] instanceof uglify.AST_String
+
+  node.args[0].value
