@@ -30,7 +30,7 @@ usage = ->
 
     Options:
       --coffee           Register the '.coffee' extension to support CoffeeScript
-                         files (requires the 'coffee-script' module)
+                         files (requires the 'coffeescript' module)
       --compress     -c  Compress result with uglify-js (otherwise result is
                          beautified)
       --help         -h  Print this notice
@@ -56,7 +56,7 @@ for arg, i in args
   unless stop
     switch arg
       when '--coffee'
-        coffee = require 'coffee-script'
+        coffee = require 'coffeescript'
         options.extensions['.coffee'] = (x) ->
           coffee.compile fs.readFileSync x, 'utf8'
       when '--compress', '-c'

@@ -26,7 +26,7 @@ as expected on the browser or even in Node.
 #### Options
 
     --coffee           Register the '.coffee' extension to support CoffeeScript
-                       files (requires the 'coffee-script' module)
+                       files (requires the 'coffeescript' module)
     --compress     -c  Compress result with uglify-js (otherwise result is
                        beautified)
     --help         -h  Print this notice

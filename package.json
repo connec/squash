@@ -12,12 +12,12 @@
   },
   "devDependencies": {
     "chai": "^2.3.0",
-    "coffee-script": "1.x.x",
+    "coffeescript": "^2.1.0",
     "mocha": "^2.5.3",
-    "plantation": "0.0.16",
+    "plantation": "0.0.17",
     "sinon": "^1.17.6",
     "sinon-chai": "^2.8.0",
-    "yaml-js": "^0.1.1"
+    "yaml-js": "^0.2.1"
   },
   "repository": {
     "type": "git",
