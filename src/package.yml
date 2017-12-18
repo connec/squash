@@ -6,7 +6,7 @@ license:         WTFPL
 bin:
   squash:        ./bin/squash
 dependencies:
-  uglify-js:     3.2.2
+  uglify-es:     3.2.2
 devDependencies:
   chai:          ^2.3.0
   coffeescript:  ^2.1.0

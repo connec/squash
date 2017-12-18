@@ -1,6 +1,6 @@
 fs     = require 'fs'
 path   = require 'path'
-uglify = require 'uglify-js'
+uglify = require 'uglify-es'
 util   = require 'util'
 
 class exports.Squash
